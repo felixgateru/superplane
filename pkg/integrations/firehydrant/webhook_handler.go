@@ -13,7 +13,7 @@ type WebhookConfiguration struct {
 }
 
 type WebhookMetadata struct {
-	WebhookID string `json:"webhookId"`
+	WebhookID string `json:"webhookId" mapstructure:"webhookId"`
 }
 
 type FireHydrantWebhookHandler struct{}
