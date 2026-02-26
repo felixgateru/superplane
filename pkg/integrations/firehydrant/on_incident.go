@@ -288,6 +288,10 @@ func extractSeveritySlug(payload WebhookPayload) string {
 		return ""
 	}
 
+	if sevStr, ok := severity.(string); ok {
+		return sevStr
+	}
+
 	sevMap, ok := severity.(map[string]any)
 	if !ok {
 		return ""

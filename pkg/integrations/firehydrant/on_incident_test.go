@@ -231,7 +231,8 @@ func Test__OnIncident__HandleWebhook(t *testing.T) {
 			Body:    body,
 			Headers: headers,
 			Configuration: map[string]any{
-				"severities": []any{"SEV1"},
+				"current_milestone": []any{"started"},
+				"severities":        []any{"SEV1"},
 			},
 			Webhook: &contexts.WebhookContext{Secret: secret},
 			Events:  eventContext,
@@ -264,7 +265,78 @@ func Test__OnIncident__HandleWebhook(t *testing.T) {
 			Body:    body,
 			Headers: headers,
 			Configuration: map[string]any{
-				"severities": []any{"SEV1"},
+				"current_milestone": []any{"started"},
+				"severities":        []any{"SEV1"},
+			},
+			Webhook: &contexts.WebhookContext{Secret: secret},
+			Events:  eventContext,
+		})
+
+		require.Equal(t, http.StatusOK, code)
+		require.NoError(t, err)
+		assert.Equal(t, 0, eventContext.Count())
+	})
+
+	t.Run("severity filter match with plain string severity -> event emitted", func(t *testing.T) {
+		body := []byte(`{
+			"data": {
+				"incident": {
+					"id": "inc-123",
+					"name": "DB Outage",
+					"severity": "SEV1"
+				}
+			},
+			"event": {
+				"operation": "CREATED",
+				"resource_type": "incident"
+			}
+		}`)
+		secret := "test-secret"
+		headers := http.Header{}
+		headers.Set("fh-signature", signatureFor(secret, body))
+
+		eventContext := &contexts.EventContext{}
+		code, err := trigger.HandleWebhook(core.WebhookRequestContext{
+			Body:    body,
+			Headers: headers,
+			Configuration: map[string]any{
+				"current_milestone": []any{"started"},
+				"severities":        []any{"SEV1", "SEV0"},
+			},
+			Webhook: &contexts.WebhookContext{Secret: secret},
+			Events:  eventContext,
+		})
+
+		require.Equal(t, http.StatusOK, code)
+		require.NoError(t, err)
+		assert.Equal(t, 1, eventContext.Count())
+	})
+
+	t.Run("severity filter mismatch with plain string severity -> no emit", func(t *testing.T) {
+		body := []byte(`{
+			"data": {
+				"incident": {
+					"id": "inc-123",
+					"name": "Minor Issue",
+					"severity": "SEV3"
+				}
+			},
+			"event": {
+				"operation": "CREATED",
+				"resource_type": "incident"
+			}
+		}`)
+		secret := "test-secret"
+		headers := http.Header{}
+		headers.Set("fh-signature", signatureFor(secret, body))
+
+		eventContext := &contexts.EventContext{}
+		code, err := trigger.HandleWebhook(core.WebhookRequestContext{
+			Body:    body,
+			Headers: headers,
+			Configuration: map[string]any{
+				"current_milestone": []any{"started"},
+				"severities":        []any{"SEV1"},
 			},
 			Webhook: &contexts.WebhookContext{Secret: secret},
 			Events:  eventContext,
