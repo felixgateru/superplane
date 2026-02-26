@@ -227,9 +227,10 @@ func (c *Client) CreateIncident(request CreateIncidentRequest) (*Incident, error
 
 // Webhook represents a FireHydrant webhook configuration
 type Webhook struct {
-	ID    string `json:"id"`
-	URL   string `json:"url"`
-	State string `json:"state"`
+	ID            string   `json:"id"`
+	URL           string   `json:"url"`
+	State         string   `json:"state"`
+	Subscriptions []string `json:"subscriptions"`
 }
 
 type WebhooksResponse struct {
@@ -273,4 +274,51 @@ func (c *Client) DeleteWebhook(id string) error {
 	url := fmt.Sprintf("%s/webhooks/%s", c.BaseURL, id)
 	_, err := c.execRequest(http.MethodDelete, url, nil)
 	return err
+}
+
+func (c *Client) ListWebhooks() ([]Webhook, error) {
+	url := fmt.Sprintf("%s/webhooks", c.BaseURL)
+	responseBody, err := c.execRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response WebhooksResponse
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing response: %v", err)
+	}
+
+	return response.Data, nil
+}
+
+type UpdateWebhookRequest struct {
+	URL           string   `json:"url"`
+	Subscriptions []string `json:"subscriptions,omitempty"`
+}
+
+func (c *Client) UpdateWebhook(id, webhookURL string, subscriptions []string) (*Webhook, error) {
+	request := UpdateWebhookRequest{
+		URL:           webhookURL,
+		Subscriptions: subscriptions,
+	}
+
+	body, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling request: %v", err)
+	}
+
+	url := fmt.Sprintf("%s/webhooks/%s", c.BaseURL, id)
+	responseBody, err := c.execRequest(http.MethodPatch, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	var webhook Webhook
+	err = json.Unmarshal(responseBody, &webhook)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing response: %v", err)
+	}
+
+	return &webhook, nil
 }
