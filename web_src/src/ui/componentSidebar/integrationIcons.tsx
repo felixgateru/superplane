@@ -19,6 +19,7 @@ import datadogIcon from "@/assets/icons/integrations/datadog.svg";
 import daytonaIcon from "@/assets/icons/integrations/daytona.svg";
 import digitaloceanIcon from "@/assets/icons/integrations/digitalocean.svg";
 import discordIcon from "@/assets/icons/integrations/discord.svg";
+import firehydrantIcon from "@/assets/icons/integrations/firehydrant.svg";
 import telegramIcon from "@/assets/icons/integrations/telegram.svg";
 import githubIcon from "@/assets/icons/integrations/github.svg";
 import gitlabIcon from "@/assets/icons/integrations/gitlab.svg";
@@ -40,10 +41,12 @@ import prometheusIcon from "@/assets/icons/integrations/prometheus.svg";
 import renderIcon from "@/assets/icons/integrations/render.svg";
 import dockerIcon from "@/assets/icons/integrations/docker.svg";
 import hetznerIcon from "@/assets/icons/integrations/hetzner.svg";
+import honeycombIcon from "@/assets/icons/integrations/honeycomb.svg";
 import jfrogArtifactoryIcon from "@/assets/icons/integrations/jfrog-artifactory.svg";
 import harnessIcon from "@/assets/icons/integrations/harness.svg";
 import servicenowIcon from "@/assets/icons/integrations/servicenow.svg";
 import statuspageIcon from "@/assets/icons/integrations/statuspage.svg";
+import launchdarklyIcon from "@/assets/icons/integrations/launchdarkly.svg";
 
 /** Integration type name (e.g. "github") → logo src. Used for Settings tab and header. */
 export const INTEGRATION_APP_LOGO_MAP: Record<string, string> = {
@@ -56,6 +59,7 @@ export const INTEGRATION_APP_LOGO_MAP: Record<string, string> = {
   daytona: daytonaIcon,
   digitalocean: digitaloceanIcon,
   discord: discordIcon,
+  firehydrant: firehydrantIcon,
   telegram: telegramIcon,
   github: githubIcon,
   gitlab: gitlabIcon,
@@ -78,10 +82,12 @@ export const INTEGRATION_APP_LOGO_MAP: Record<string, string> = {
   prometheus: prometheusIcon,
   render: renderIcon,
   dockerhub: dockerIcon,
+  honeycomb: honeycombIcon,
   gcp: gcpIcon,
   harness: harnessIcon,
   servicenow: servicenowIcon,
   statuspage: statuspageIcon,
+  launchdarkly: launchdarklyIcon,
 };
 
 /** Block name first part (e.g. "github") or compound (e.g. aws.lambda) → logo src for header. */
@@ -94,6 +100,7 @@ export const APP_LOGO_MAP: Record<string, string | Record<string, string>> = {
   daytona: daytonaIcon,
   digitalocean: digitaloceanIcon,
   discord: discordIcon,
+  firehydrant: firehydrantIcon,
   telegram: telegramIcon,
   github: githubIcon,
   gitlab: gitlabIcon,
@@ -119,6 +126,7 @@ export const APP_LOGO_MAP: Record<string, string | Record<string, string>> = {
   harness: harnessIcon,
   servicenow: servicenowIcon,
   statuspage: statuspageIcon,
+  launchdarkly: launchdarklyIcon,
   aws: {
     cloudwatch: awsCloudwatchIcon,
     codeArtifact: awsCodeArtifactIcon,
@@ -131,6 +139,7 @@ export const APP_LOGO_MAP: Record<string, string | Record<string, string>> = {
     ecs: awsEcsIcon,
     sns: awsSnsIcon,
   },
+  honeycomb: honeycombIcon,
   gcp: gcpIcon,
 };
 
