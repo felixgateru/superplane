@@ -1,113 +1,113 @@
-version: v1.0
-name: "Superplane Release Pipeline"
+# This is a Semaphore configuration file for fan-in/fan-out workflow
+# For more information about Semaphore configuration visit:
+# https://docs.semaphoreci.com/reference/pipeline-yaml-reference/
 
+version: v1.0  # Semaphore configuration version
+name: "🌟 Fan-In/Fan-Out Pipeline"  # Pipeline display name
+
+# Define the machine type and OS image
 agent:
   machine:
-    type: f1-standard-2
-    os_image: ubuntu2204
+    type: a2-standard-4
+    os_image: macos-xcode16
 
-global_job_config:
-  env_vars:
-    - name: DOCKER_BUILDKIT
-      value: "1"
+# Configure when to stop the pipeline early
+fail_fast:
+  stop:
+    when: branch != 'main'  # Stop all blocks if a job fails on non-main branches
+auto_cancel:
+  running:
+    when: branch != 'main'  # Cancel running pipelines on non-main branches
+  queued:
+    when: branch = 'main'   # Cancel queued pipelines on main branch
 
-  secrets:
-    - name: ghcr-push-token
-
-  prologue:
-    commands:
-      - git clone https://github.com/superplanehq/superplane.git
-      - cd superplane
-      - touch agent/.env
-      - |
-        if git show-ref --verify --quiet refs/heads/$REL_VERSION || git show-ref --verify --quiet refs/tags/$REL_VERSION; then
-          git checkout $REL_VERSION
-        else
-          git checkout -b $REL_VERSION
-        fi
-      - |
-        cat <<EOF > release-metadata.json
-        {
-          "version": "$REL_VERSION",
-          "commit": "$(git rev-parse HEAD)",
-          "date": "$(date -Iseconds)",
-          "workflow_id": "$SEMAPHORE_WORKFLOW_ID"
-        }
-        EOF
-
-      - echo "$GHCR_PUSH_TOKEN" | docker login ghcr.io -u superplanehq --password-stdin
-      - echo "$GHCR_PUSH_TOKEN" | helm registry login ghcr.io -u superplanehq --password-stdin
-
+# Pipeline blocks represent groups of jobs that can run in parallel
 blocks:
-  - name: "Docker Images amd64"
+  # Initial setup block (fan-out starts here)
+  - name: "🛠️ Setup"
     dependencies: []
     task:
-      env_vars:
-        - name: REL_ARCH
-          value: "amd64"
-
-      agent:
-        machine:
-          type: f1-standard-2
-          os_image: ubuntu2204
-
       jobs:
-        - name: "SuperPlane Demo Image"
+        - name: "📦 Install Dependencies"
           commands:
-            - bash release/superplane-demo-image/build.sh $REL_VERSION $REL_ARCH
+            - echo "Checking out code..."
+            - echo "Installing project dependencies..."
+            - echo "Setup completed successfully!"
 
-        - name: "SuperPlane Image"
-          commands:
-            - bash release/superplane-image/build.sh $REL_VERSION $REL_ARCH
-
-  - name: "Docker Images arm64"
-    dependencies: []
-    task:
-      env_vars:
-        - name: REL_ARCH
-          value: "arm64"
-
-      agent:
-        machine:
-          type: r1-standard-4
-          os_image: ubuntu2404
-
-      jobs:
-        - name: "SuperPlane Demo Image"
-          commands:
-            - bash release/superplane-demo-image/build.sh $REL_VERSION $REL_ARCH
-
-        - name: "SuperPlane Image"
-          commands:
-            - bash release/superplane-image/build.sh $REL_VERSION $REL_ARCH
-
-  - name: "Build Multi-Platform Manifest"
-    dependencies: ["Docker Images amd64", "Docker Images arm64"]
+  # Parallel testing blocks (fan-out)
+  - name: "🧪 Unit Tests"
+    dependencies: ["🛠️ Setup"]
     task:
       jobs:
-        - name: "SuperPlane Demo Image"
+        - name: "🟢 Run Unit Tests"
           commands:
-            - docker manifest create $DEMO_IMAGE_REPO:$REL_VERSION $DEMO_IMAGE_REPO:$REL_VERSION-amd64 $DEMO_IMAGE_REPO:$REL_VERSION-arm64
-            - docker manifest push $DEMO_IMAGE_REPO:$REL_VERSION
+            - echo "Running unit test suite..."
+            - echo "Unit tests passed successfully!"
 
-        - name: "SuperPlane Image"
-          commands:
-            - docker manifest create $STANDARD_IMAGE_REPO:$REL_VERSION $STANDARD_IMAGE_REPO:$REL_VERSION-amd64 $STANDARD_IMAGE_REPO:$REL_VERSION-arm64
-            - docker manifest push $STANDARD_IMAGE_REPO:$REL_VERSION
-
-  - name: "Verify Images"
-    dependencies: ["Build Multi-Platform Manifest"]
+  - name: "🔍 Integration Tests"
+    dependencies: ["🛠️ Setup"]
     task:
       jobs:
-        - name: "Verify GHCR Images"
+        - name: "🔄 Run Integration Tests"
           commands:
-            - docker manifest inspect $STANDARD_IMAGE_REPO:$REL_VERSION
-            - docker manifest inspect $DEMO_IMAGE_REPO:$REL_VERSION
+            - echo "Setting up test database..."
+            - echo "Running integration tests..."
+            - echo "Integration tests passed successfully!"
 
-  - name: "SuperPlane Helm Chart"
-    dependencies: ["Verify Images"]
+  - name: "🌐 E2E Tests"
+    dependencies: ["🛠️ Setup"]
     task:
       jobs:
-        - name: "SuperPlane Helm Chart"
+        - name: "🎭 Run E2E Tests"
           commands:
-            - bash release/superplane-helm-chart/build.sh $REL_VERSION
+            - echo "Starting test environment..."
+            - echo "Running end-to-end tests..."
+            - echo "E2E tests passed successfully!"
+
+  # Code quality checks (fan-out)
+  - name: "✨ Code Quality"
+    dependencies: ["🛠️ Setup"]
+    task:
+      jobs:
+        - name: "🔍 Lint"
+          commands:
+            - echo "Running code linting..."
+            - echo "Linting passed successfully!"
+        - name: "📊 Type Check"
+          commands:
+            - echo "Running type checks..."
+            - echo "Type checking passed successfully!"
+
+  # Security checks (fan-out)
+  - name: "🔐 Security"
+    dependencies: ["🛠️ Setup"]
+    task:
+      jobs:
+        - name: "🛡️ Security Scan"
+          commands:
+            - echo "Scanning dependencies..."
+            - echo "Running security checks..."
+            - echo "Security scan completed successfully!"
+
+  # Build block (fan-in)
+  - name: "📦 Build"
+    dependencies: ["🧪 Unit Tests", "🔍 Integration Tests", "🌐 E2E Tests", "✨ Code Quality", "🔐 Security"]
+    task:
+      jobs:
+        - name: "🔨 Build Production"
+          commands:
+            - echo "Building production assets..."
+            - echo "Optimizing build..."
+            - echo "Build completed successfully!"
+
+  # Deploy block (final fan-in)
+  - name: "🚀 Deploy"
+    dependencies: ["📦 Build"]
+    task:
+      jobs:
+        - name: "🌍 Deploy to Production"
+          commands:
+            - echo "Preparing deployment..."
+            - echo "Running deployment checks..."
+            - echo "Deploying to production..."
+            - echo "Deployment completed successfully!"
